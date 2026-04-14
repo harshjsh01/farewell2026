@@ -94,10 +94,10 @@ export async function registerUser(formData: FormData) {
       });
     } catch (e: any) {
       console.error('Nodemailer Error:', e);
-      return {
-        success: true,
-        ticketId,
-        warning: 'Ticket created, but email failed. Check your Gmail App Password setup.'
+      return { 
+        success: true, 
+        ticketId, 
+        warning: 'Email failed: ' + (e.message || 'Check Gmail App Password.') 
       };
     }
 
