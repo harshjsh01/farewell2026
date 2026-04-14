@@ -62,10 +62,11 @@ export async function registerUser(formData: FormData) {
 
     // 5. Send Email via Resend
     const ticketUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/ticket/${ticketId}`;
-    
+
     try {
       const emailRes = await resend.emails.send({
-        from: 'Farewell Team <onboarding@resend.dev>',
+        // 🚨 CHANGE THIS to your verified domain (e.g., tickets@yourdomain.com)
+        from: 'Farewell Team <tickets@ecbfarewell2026.vercel.app>',
         to: email,
         subject: 'Your Farewell 2026 Ticket is Here!',
         html: `
@@ -83,10 +84,10 @@ export async function registerUser(formData: FormData) {
 
       if (emailRes.error) {
         console.error('Resend Error:', emailRes.error);
-        return { 
-          success: true, 
-          ticketId, 
-          warning: 'Ticket created, but email failed. Resend error: ' + emailRes.error.message 
+        return {
+          success: true,
+          ticketId,
+          warning: 'Ticket created, but email failed. Resend error: ' + emailRes.error.message
         };
       }
     } catch (e: any) {
@@ -117,8 +118,8 @@ export async function verifyTicket(ticketId: string) {
     // 2. Scenario B: Already Checked In
     if (ticket.status === 'checked_in') {
       const time = new Date(ticket.checked_in_at).toLocaleTimeString();
-      return { 
-        status: 'duplicate', 
+      return {
+        status: 'duplicate',
         message: `Duplicate Entry! Already checked in at ${time}.`,
         name: ticket.name
       };
@@ -127,16 +128,16 @@ export async function verifyTicket(ticketId: string) {
     // 3. Scenario A: Success - Mark as Checked In
     const { error: updateError } = await supabase
       .from('registrations')
-      .update({ 
-        status: 'checked_in', 
-        checked_in_at: new Date().toISOString() 
+      .update({
+        status: 'checked_in',
+        checked_in_at: new Date().toISOString()
       })
       .eq('ticket_id', ticketId);
 
     if (updateError) throw updateError;
 
-    return { 
-      status: 'success', 
+    return {
+      status: 'success',
       message: 'Valid Ticket. Access Granted!',
       name: ticket.name
     };
