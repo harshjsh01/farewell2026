@@ -13,6 +13,12 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Helper to check if credentials are set
+function checkMailConfig() {
+  if (!process.env.GMAIL_USER) throw new Error('System Error: GMAIL_USER is not set in Vercel Settings.');
+  if (!process.env.GMAIL_PASS) throw new Error('System Error: GMAIL_PASS is not set in Vercel Settings.');
+}
+
 export async function registerUser(formData: FormData) {
   const name = formData.get('name') as string;
   const transactionId = formData.get('transactionId') as string;
@@ -66,6 +72,7 @@ export async function registerUser(formData: FormData) {
     const ticketUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/ticket/${ticketId}`;
 
     try {
+      checkMailConfig(); // 🚨 New: Check variables before sending
       await transporter.sendMail({
         from: `Farewell Team <${process.env.GMAIL_USER}>`,
         to: email,
