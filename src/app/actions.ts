@@ -65,8 +65,9 @@ export async function registerUser(formData: FormData) {
 
     try {
       const emailRes = await resend.emails.send({
-        // 🚨 CHANGE THIS to your verified domain (e.g., tickets@yourdomain.com)
-        from: 'Farewell Team <tickets@ecbfarewell2026.vercel.app>',
+        // 🚨 IMPORTANT: Resend only allows custom domains you own (.com, .in, etc.)
+        // Using 'onboarding@resend.dev' for testing to your own account.
+        from: 'Farewell Team <onboarding@resend.dev>', 
         to: email,
         subject: 'Your Farewell 2026 Ticket is Here!',
         html: `
