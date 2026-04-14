@@ -4,19 +4,18 @@ import { supabase } from '@/lib/supabase';
 import { nanoid } from 'nanoid';
 import nodemailer from 'nodemailer';
 
-// Initialize Nodemailer with Gmail SMTP
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS,
-  },
-});
+// Helper to check and get transporter
+function getTransporter() {
+  const user = process.env.GMAIL_USER;
+  const pass = process.env.GMAIL_PASS;
+  
+  if (!user) throw new Error('System Error: GMAIL_USER is not set in Vercel Settings.');
+  if (!pass) throw new Error('System Error: GMAIL_PASS is not set in Vercel Settings.');
 
-// Helper to check if credentials are set
-function checkMailConfig() {
-  if (!process.env.GMAIL_USER) throw new Error('System Error: GMAIL_USER is not set in Vercel Settings.');
-  if (!process.env.GMAIL_PASS) throw new Error('System Error: GMAIL_PASS is not set in Vercel Settings.');
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user, pass },
+  });
 }
 
 export async function registerUser(formData: FormData) {
@@ -68,17 +67,17 @@ export async function registerUser(formData: FormData) {
 
     if (regError) throw regError;
 
-    // 5. Send Email via Gmail (Nodemailer)
+    // 5. Send Email via Gmail
     const ticketUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/ticket/${ticketId}`;
 
     try {
-      checkMailConfig(); // 🚨 New: Check variables before sending
+      const transporter = getTransporter();
       await transporter.sendMail({
         from: `Farewell Team <${process.env.GMAIL_USER}>`,
         to: email,
         subject: 'Your Farewell 2026 Ticket is Here!',
         html: `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; rounded: 12px;">
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
             <h1 style="color: #0f172a; margin-bottom: 24px;">Hello ${name}!</h1>
             <p style="color: #475569; font-size: 16px; line-height: 1.5;">
               Your payment has been verified. Here is your unique ticket for Farewell 2026.
@@ -100,11 +99,11 @@ export async function registerUser(formData: FormData) {
         `
       });
     } catch (e: any) {
-      console.error('Nodemailer Error:', e);
+      console.error('Email Error:', e);
       return { 
         success: true, 
         ticketId, 
-        warning: 'Email failed: ' + (e.message || 'Check Gmail App Password.') 
+        warning: 'Email failed: ' + (e.message || 'Check Gmail settings.') 
       };
     }
 
@@ -161,6 +160,7 @@ export async function verifyTicket(ticketId: string) {
 
 export async function testResendConnection(toEmail: string) {
   try {
+    const transporter = getTransporter();
     await transporter.sendMail({
       from: `Farewell Team <${process.env.GMAIL_USER}>`,
       to: toEmail,
