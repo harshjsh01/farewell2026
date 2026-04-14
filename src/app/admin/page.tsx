@@ -53,30 +53,38 @@ export default function AdminPage() {
         try {
           // Robust Header Detection
           const uniqueDataMap = new Map();
+          let totalRows = parsedData.length;
+          let invalidRows = 0;
           
           parsedData.forEach((row: any) => {
-            // Find keys that map to our needed fields
             const keys = Object.keys(row);
-            const findKey = (candidates: string[]) => 
-              keys.find(k => candidates.some(c => k.toLowerCase().trim().includes(c.toLowerCase())));
+            
+            // Flexible matching for Name
+            const nameKey = keys.find(k => /name|student|guest|user/i.test(k));
+            // Flexible matching for Transaction ID
+            const tidKey = keys.find(k => /transaction|txn|id|ref|code/i.test(k));
+            // Flexible matching for Payment Method
+            const methodKey = keys.find(k => /method|payment|type|cash|online/i.test(k));
 
-            const name = row[findKey(['name', 'student', 'full name']) || ''] || '';
-            const tid = row[findKey(['transaction', 'txn', 'id', 'reference']) || ''] || '';
-            const method = row[findKey(['method', 'payment', 'type']) || ''] || 'Online';
+            const name = row[nameKey || '']?.toString().trim() || '';
+            const tid = row[tidKey || '']?.toString().trim() || '';
+            const method = row[methodKey || '']?.toString().trim() || 'Online';
 
-            if (tid) {
+            if (tid && name) {
               uniqueDataMap.set(tid, {
-                name: name.toString().trim(),
-                transaction_id: tid.toString().trim(),
-                payment_method: method.toString().trim(),
+                name: name,
+                transaction_id: tid,
+                payment_method: method,
               });
+            } else {
+              invalidRows++;
             }
           });
 
           const formattedData = Array.from(uniqueDataMap.values());
 
           if (formattedData.length === 0) {
-            setStatus({ type: 'error', message: 'No valid data found. Check your CSV column headers.' });
+            setStatus({ type: 'error', message: `Found ${totalRows} rows, but none had valid Name & Transaction ID columns.` });
             setUploading(false);
             return;
           }
@@ -87,9 +95,10 @@ export default function AdminPage() {
 
           if (error) throw error;
 
+          const duplicateCount = totalRows - invalidRows - formattedData.length;
           setStatus({
             type: 'success',
-            message: `Successfully processed ${formattedData.length} unique records.`,
+            message: `Success: Loaded ${formattedData.length} entries. (Skipped ${invalidRows} empty and ${duplicateCount} duplicate rows).`,
           });
           fetchGuestList();
         } catch (err: any) {
