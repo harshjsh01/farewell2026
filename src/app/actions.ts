@@ -64,7 +64,7 @@ export async function registerUser(formData: FormData) {
 
     // 5. Send Email via Gmail (Nodemailer)
     const ticketUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/ticket/${ticketId}`;
-    
+
     try {
       await transporter.sendMail({
         from: `Farewell Team <${process.env.GMAIL_USER}>`,
@@ -94,10 +94,10 @@ export async function registerUser(formData: FormData) {
       });
     } catch (e: any) {
       console.error('Nodemailer Error:', e);
-      return { 
-        success: true, 
-        ticketId, 
-        warning: 'Ticket created, but email failed. Check your Gmail App Password setup.' 
+      return {
+        success: true,
+        ticketId,
+        warning: 'Ticket created, but email failed. Check your Gmail App Password setup.'
       };
     }
 
@@ -124,8 +124,8 @@ export async function verifyTicket(ticketId: string) {
     // 2. Scenario B: Already Checked In
     if (ticket.status === 'checked_in') {
       const time = new Date(ticket.checked_in_at).toLocaleTimeString();
-      return { 
-        status: 'duplicate', 
+      return {
+        status: 'duplicate',
         message: `Duplicate Entry! Already checked in at ${time}.`,
         name: ticket.name
       };
@@ -134,16 +134,16 @@ export async function verifyTicket(ticketId: string) {
     // 3. Scenario A: Success - Mark as Checked In
     const { error: updateError } = await supabase
       .from('registrations')
-      .update({ 
-        status: 'checked_in', 
-        checked_in_at: new Date().toISOString() 
+      .update({
+        status: 'checked_in',
+        checked_in_at: new Date().toISOString()
       })
       .eq('ticket_id', ticketId);
 
     if (updateError) throw updateError;
 
-    return { 
-      status: 'success', 
+    return {
+      status: 'success',
       message: 'Valid Ticket. Access Granted!',
       name: ticket.name
     };
@@ -167,3 +167,4 @@ export async function testResendConnection(toEmail: string) {
     return { error: err.message || 'Failed to send test email.' };
   }
 }
+//harshjoshi
